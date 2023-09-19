@@ -488,8 +488,9 @@ def main(argv=None):
 
     patternfinder = ASTPatternFinder(ast_pattern)
 
-    if getattr(args, 'max_lines'):
-        def _printline(node, filelines):
+    if getattr(args, "max_lines") and False:
+
+        def _printline(node, filelines, filepath):
             for lineno in range(node.lineno, node.end_lineno + 1)[:args.max_lines]:
                 print("{:>4}|{}".format(lineno, filelines[lineno - 1].rstrip()))
             elided = max(node.end_lineno + 1 - node.lineno - args.max_lines, 0)
@@ -497,8 +498,13 @@ def main(argv=None):
                 print("    └<{} more line{}>".format(elided, ['', 's'][elided > 1]))
             print()
     else:
-        def _printline(node, filelines):
-            print("{:>4}|{}".format(node.lineno, filelines[node.lineno-1].rstrip()))
+
+        def _printline(node, filelines, filepath):
+            print(
+                "{}:{:<4}|{}".format(
+                    filepath, node.lineno, filelines[node.lineno - 1].rstrip()
+                )
+            )
 
     current_filelines = []
     if os.path.isdir(args.path):
@@ -518,7 +524,7 @@ def main(argv=None):
                         print()  # Blank line between files
                     current_filepath = filepath
                     print(filepath)
-                _printline(node, current_filelines)
+                _printline(node, current_filelines, filepath)
 
     elif os.path.exists(args.path):
         # Search file
@@ -534,7 +540,7 @@ def main(argv=None):
                 if not current_filelines:
                     with tokenize.open(args.path) as f:
                         current_filelines = f.readlines()
-                _printline(node, current_filelines)
+                _printline(node, current_filelines, filepath)
 
     else:
         sys.exit("No such file or directory: {}".format(args.path))
